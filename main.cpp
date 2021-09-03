@@ -4,18 +4,22 @@
 #include <iostream>
 #include <random>
 
-template <typename T> void random_fill_vector(int seed, int size, std::vector<T> &vec)
+template <typename T> std::vector<T> generate_random_vector(int seed, int size)
 {
+    std::vector<T> vec(size);
+
     std::default_random_engine eng(seed);
-    std::uniform_real_distribution<T> distr(0, 256);
-    vec.resize(size);
+    std::uniform_real_distribution<T> distr(0, 128);
+
     std::generate(vec.begin(), vec.end(), [&distr, &eng]() { return distr(eng); });
+    return vec;
 }
 
 template <typename T> std::vector<T> manual_sub(std::vector<T> &vec, const T value)
 {
     std::vector<T> sub_vec(vec.size());
-    std::generate(sub_vec.begin(), sub_vec.end(), [&, i = 0]() mutable { return vec[i++] - value; });
+    int i = 0;
+    std::generate(sub_vec.begin(), sub_vec.end(), [&, i]() mutable { return vec[i++] - value; });
     return sub_vec;
 }
 
@@ -52,27 +56,51 @@ std::vector<T> dnnl_sub(std::vector<T> &vec, const T value, const dnnl::memory::
     return sub_data;
 }
 
+template <typename T> bool fp_compare(const T &A, const T &B)
+{
+    return abs(A - B) < 0.00001;
+}
+
+template <typename T>
+bool test_dnnl_sub(const dnnl::memory::dims dimensions, const int random_seed, const T sub_value,
+                   dnnl::memory::data_type data_type, dnnl::memory::format_tag format_tag)
+{
+    int data_size = 1;
+    for (const int &dimension : dimensions)
+        data_size *= dimension;
+
+    std::vector<T> data = generate_random_vector<T>(random_seed, data_size);
+
+    std::vector<T> dnnl_sub_data = dnnl_sub<T>(data, sub_value, data_type, format_tag, dimensions, data_size);
+    std::vector<T> manual_sub_data = manual_sub<T>(data, sub_value);
+
+    return std::equal(dnnl_sub_data.begin(), dnnl_sub_data.end(), manual_sub_data.begin(), fp_compare<T>);
+}
+
+std::string test_result(bool result)
+{
+    if (result)
+        return "Passed";
+    return "Failed";
+}
+
 int main()
 {
-    const int batch_dim = 1, channel_dim = 10, width = 5, height = 3;
-    const int data_size = batch_dim * channel_dim * width * height;
-    const int random_seed = 1337;
 
-    const float sub_value = 10.0;
+    std::cout << "3 Dimension test: "
+              << test_result(test_dnnl_sub<float>({1, 3, 5}, 0, 4.5, dnnl::memory::data_type::f32,
+                                                  dnnl::memory::format_tag::nwc))
+              << std::endl;
 
-    const dnnl::memory::dims dimensions = {batch_dim, channel_dim, height, width};
+    std::cout << "4 Dimension test: "
+              << test_result(test_dnnl_sub<float>({1, 3, 3, 7}, 1337, 10, dnnl::memory::data_type::f32,
+                                                  dnnl::memory::format_tag::nhwc))
+              << std::endl;
 
-    std::vector<float> data;
-    random_fill_vector<float>(random_seed, data_size, data);
-
-    std::vector<float> dnnl_sub_data = dnnl_sub<float>(data, sub_value, dnnl::memory::data_type::f32,
-                                                       dnnl::memory::format_tag::nhwc, dimensions, data_size);
-    std::vector<float> manual_sub_data = manual_sub<float>(data, sub_value);
-
-    for (int i = 0; i < data.size(); i++)
-    {
-        std::cout << data[i] << " " << dnnl_sub_data[i] << " " << manual_sub_data[i] << std::endl;
-    }
+    std::cout << "5 Dimension test: "
+              << test_result(test_dnnl_sub<float>({1, 2, 3, 4, 5}, 500, 11.5, dnnl::memory::data_type::f32,
+                                                  dnnl::memory::format_tag::ndhwc))
+              << std::endl;
 
     return 0;
 }
