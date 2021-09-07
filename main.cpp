@@ -122,17 +122,17 @@ int main()
                                                   dnnl::memory::format_tag::ndhwc))
               << std::endl;
 
-    std::cout << "3 Dimension char test: "
+    std::cout << "3 Dimension char (int8) test: "
               << test_result(
                      test_dnnl_sub<char>({1, 3, 5}, 0, 5, dnnl::memory::data_type::s8, dnnl::memory::format_tag::nwc))
               << std::endl;
 
-    std::cout << "4 Dimension char test: "
+    std::cout << "4 Dimension char (int8) test: "
               << test_result(test_dnnl_sub<char>({1, 3, 3, 7}, 1337, 10, dnnl::memory::data_type::s8,
                                                  dnnl::memory::format_tag::nhwc))
               << std::endl;
 
-    std::cout << "5 Dimension char test: "
+    std::cout << "5 Dimension char (int8) test: "
               << test_result(test_dnnl_sub<char>({1, 2, 3, 4, 5}, 500, 12, dnnl::memory::data_type::s8,
                                                  dnnl::memory::format_tag::ndhwc))
               << std::endl;
@@ -151,22 +151,6 @@ int main()
               << test_result(test_dnnl_sub<unsigned char>({1, 2, 3, 4, 5}, 500, 12, dnnl::memory::data_type::u8,
                                                           dnnl::memory::format_tag::ndhwc))
               << std::endl;
-
-    // std::cout << "3 Dimension int test: "
-    //           << test_result(
-    //                  test_dnnl_sub<int>({1, 3, 5}, 0, 5, dnnl::memory::data_type::s32,
-    //                  dnnl::memory::format_tag::nwc))
-    //           << std::endl;
-
-    // std::cout << "4 Dimension int test: "
-    //           << test_result(test_dnnl_sub<int>({1, 3, 3, 7}, 1337, 10, dnnl::memory::data_type::s32,
-    //                                             dnnl::memory::format_tag::nhwc))
-    //           << std::endl;
-
-    // std::cout << "5 Dimension int test: "
-    //           << test_result(test_dnnl_sub<int>({1, 2, 3, 4, 5}, 500, 12, dnnl::memory::data_type::s32,
-    //                                             dnnl::memory::format_tag::ndhwc))
-    //           << std::endl;
 
     return 0;
 }
