@@ -1,5 +1,5 @@
-#include <../examples/example_utils.hpp>
-#include <oneapi/dnnl/dnnl.hpp>
+#include "dnnl.hpp"
+#include "example_utils.hpp"
 
 #include <iostream>
 #include <random>
@@ -59,10 +59,8 @@ std::vector<T> dnnl_sub(std::vector<T> &vec1, std::vector<T> &vec2, const dnnl::
     write_to_dnnl_memory(vec1.data(), src_memory_object_0);
     write_to_dnnl_memory(vec2.data(), src_memory_object_1);
 
-    auto sub_d = dnnl::binary::desc(dnnl::algorithm::binary_sub, memory_descriptor_0, memory_descriptor_1,
-                                    memory_descriptor_dst);
-    dnnl::primitive_attr binary_attr;
-    auto sub_pd = dnnl::binary::primitive_desc(sub_d, eng);
+    auto sub_pd = dnnl::binary::primitive_desc(eng, dnnl::algorithm::binary_sub, memory_descriptor_0,
+                                               memory_descriptor_1, memory_descriptor_dst);
     auto sub = dnnl::binary(sub_pd);
 
     sub.execute(eng_stream, {{DNNL_ARG_SRC_0, src_memory_object_0},
@@ -90,7 +88,6 @@ bool test_dnnl_sub(const dnnl::memory::dims dimensions, const int random_seed, c
 
     std::vector<T> data_1 = generate_random_vector<T>(random_seed, data_size, 50, 100);
     std::vector<T> data_2 = generate_random_vector<T>(random_seed + 5, data_size, 10, 20);
-
     std::vector<T> dnnl_sub_data = dnnl_sub<T>(data_1, data_2, data_type, format_tag, dimensions, data_size);
     std::vector<T> manual_sub_data = manual_sub<T>(data_1, data_2);
 
@@ -151,6 +148,5 @@ int main()
               << test_result(test_dnnl_sub<unsigned char>({1, 2, 3, 4, 5}, 500, 12, dnnl::memory::data_type::u8,
                                                           dnnl::memory::format_tag::ndhwc))
               << std::endl;
-
     return 0;
 }

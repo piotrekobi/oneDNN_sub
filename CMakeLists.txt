@@ -23,7 +23,7 @@ endif()
 FetchContent_Declare(
 dnnl
 GIT_REPOSITORY https://github.com/intel/mkl-dnn
-GIT_TAG v2.1
+GIT_TAG v3.0
 GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(dnnl)
